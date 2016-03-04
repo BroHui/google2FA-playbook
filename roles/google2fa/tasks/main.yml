@@ -1,0 +1,47 @@
+---
+# tasks file for google2fa
+
+- name: 安装YUM依赖
+  yum: name={{ item }} state=present
+  with_items:
+  - make
+  - gcc
+  - pam-devel
+  - qrencode
+  - qrencode-devel
+  - ntp
+  - unzip
+  - autoconf
+  - automake
+
+- name: 启用ntp服务
+  service: name=ntpd state=started enabled=yes
+
+- name: 解压google-2fa
+  unarchive: src=google-authenticator.zip dest=/root/
+
+- name: ./bootstrap.sh
+  shell: ./bootstrap.sh chdir=/root/google-authenticator-master/libpam/
+
+- name: ./configure
+  shell: ./configure chdir=/root/google-authenticator-master/libpam/
+
+- name: 编译源代码
+  shell: make && make install chdir=/root/google-authenticator-master/libpam/
+
+- name: 安装so
+  shell: cp -v /root/google-authenticator-master/libpam/.libs/pam_google_authenticator.so /lib64/security/
+
+- name: 生成2fa配置
+  shell: "google-authenticator -t -Q ANSI -D -f -u -w 17 | head -1"
+  register: output
+
+- name: 二维码链接
+  debug: var=output.stdout
+
+- name: 修改pam配置
+  lineinfile:
+    dest=/etc/pam.d/sshd
+    line="auth       required     pam_google_authenticator.so"
+    insertafter="#%PAM-1.0"
+    state=present

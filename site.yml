@@ -1,0 +1,8 @@
+---
+
+- name: Google 2FA安装
+  hosts: all
+  remote_user: root
+
+  roles:
+  - google2fa
