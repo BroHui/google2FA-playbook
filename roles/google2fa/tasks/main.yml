@@ -13,6 +13,12 @@
   - unzip
   - autoconf
   - automake
+  - libtool
+
+- name: 拷贝SSH证书
+  authorized_key: user=root key="{{ lookup('file', item)}}"
+  with_items:
+  - id_rsa.pub
 
 - name: 启用ntp服务
   service: name=ntpd state=started enabled=yes
@@ -39,9 +45,41 @@
 - name: 二维码链接
   debug: var=output.stdout
 
+- name: 修改ssh配置文件
+  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^PasswordAuthentication"
+    line="PasswordAuthentication yes"
+
+-  lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^ChallengeResponseAuthentication"
+    line="ChallengeResponseAuthentication yes"
+
+- lineinfile:
+    dest=/etc/ssh/sshd_config
+    regexp="^UsePAM"
+    line="UsePAM yes"
+
+- name: 复制access-local.conf
+  copy:
+    src=access-local.conf
+    dest=/etc/security/
+
 - name: 修改pam配置
   lineinfile:
     dest=/etc/pam.d/sshd
-    line="auth       required     pam_google_authenticator.so"
+    line="auth [success=1 default=ignore] pam_access.so accessfile=/etc/security/access-local.conf"
     insertafter="#%PAM-1.0"
     state=present
+
+- lineinfile:
+    dest=/etc/pam.d/sshd
+    line="auth       required     pam_google_authenticator.so"
+    insertafter="access-local.conf$"
+    state=present
+
+- name: 重启SSH服务
+  service:
+    name=sshd
+    state=restarted
