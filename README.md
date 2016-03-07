@@ -42,10 +42,10 @@ SSH服务器启用google authenticator的剧本.
 
 
 ### 问答
-Q: 手机APP有什么选择?
+Q: 手机APP有什么选择?  
 A: google官方有google authenticator应用,可以从APP Store下载. 我推荐的是1Password.
 
-Q: 为什么使用ssh -o PubkeyAuthentication=no方式登陆的时候, 远程主机还是没有要求我输入校验码?
+Q: 为什么使用ssh -o PubkeyAuthentication=no方式登陆的时候, 远程主机还是没有要求我输入校验码?  
 A: 因为默认剧本中是对局域网环境作免校验处理的, 请检查是否在同一个192.168.段中
 
 
